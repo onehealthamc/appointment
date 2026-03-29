@@ -1125,6 +1125,7 @@
 
 <!-- PANEL: 변경·취소 -->
 <div class="page-panel" id="panelChange">
+<main class="main">
 
   <div class="notice">
     <div class="notice-icon">📌</div>
@@ -1940,8 +1941,7 @@
     document.getElementById('changeSummary').innerHTML = summary.map(([k,v]) =>
       `<div class="success-info-row"><span>${k}</span><span>${v}</span></div>`).join('');
     document.getElementById('changeForm').style.display = 'none';
-    document.querySelector('#panelChange .notice').style.display = 'none';
-    document.querySelector('#panelChange .section-card').style.display = 'none';
+    document.querySelectorAll('#panelChange .notice').forEach(el => el.style.display = 'none');
     document.getElementById('changeSuccessScreen').classList.add('show');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
@@ -1949,8 +1949,7 @@
   function resetChangeForm() {
     document.getElementById('changeForm').reset();
     document.getElementById('changeForm').style.display = 'block';
-    document.querySelector('#panelChange .notice').style.display = 'flex';
-    document.querySelector('#panelChange .section-card').style.display = 'block';
+    document.querySelectorAll('#panelChange .notice').forEach(el => el.style.display = 'flex');
     document.getElementById('changeSuccessScreen').classList.remove('show');
     selectedChangeType = '';
     document.getElementById('btnTypeChange').className = 'change-type-btn';
