@@ -1540,17 +1540,52 @@
     const visitType = document.querySelector('input[name="visitType"]:checked').value;
     const breed = getBreedValue();
 
+    // 추가 반려동물 정보 수집
+    const extraList = [];
+    document.querySelectorAll('.extra-pet-card').forEach(card => {
+      const id = card.id.replace('extraPet-', '');
+      const eSel = document.getElementById('eBreed' + id);
+      const eb = (eSel.value && eSel.value.includes('직접 명시'))
+        ? (document.getElementById('eBreedCustomText' + id) || {}).value || ''
+        : eSel.value;
+      extraList.push(
+        document.getElementById('eName' + id).value + ' / ' +
+        document.getElementById('eAge' + id).value + ' / ' +
+        (document.querySelector('input[name="eGender' + id + '"]:checked') || {}).value + ' / ' + eb
+      );
+    });
+
+    const payload = {
+      type: 'reservation',
+      visitType,
+      ownerName:    document.getElementById('ownerName').value.trim(),
+      phone:        document.getElementById('phone').value,
+      address:      document.getElementById('ownerAddress').value.trim(),
+      petName:      document.getElementById('petName').value.trim(),
+      petAge:       document.getElementById('petAge').value,
+      petBirthdate: document.getElementById('petBirthdate').value,
+      gender,
+      breed,
+      symptoms:     document.getElementById('symptoms').value.trim(),
+      extraPets:    extraList.join(' | ')
+    };
+
+    fetch('https://script.google.com/macros/s/AKfycbzwx85DjWxevvP4G622PUl_hwRbkukA7E7ZKhQuLBXC4gEeMNff76qS0QOgSRTp135ZYg/exec', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }).catch(() => {});
+
     const summary = [
       ['내원 구분', visitType],
-      ['주소', document.getElementById('ownerAddress').value.trim()],
-      ['보호자', document.getElementById('ownerName').value.trim()],
-      ['전화번호', document.getElementById('phone').value],
-      ['반려동물', document.getElementById('petName').value.trim()],
-      ['나이', document.getElementById('petAge').value],
-      ...(document.getElementById('petBirthdate').value ? [['생년월일', document.getElementById('petBirthdate').value.replace(/-/g, '.')]] : []),
+      ['주소', payload.address],
+      ['보호자', payload.ownerName],
+      ['전화번호', payload.phone],
+      ['반려동물', payload.petName],
+      ['나이', payload.petAge],
+      ...(payload.petBirthdate ? [['생년월일', payload.petBirthdate.replace(/-/g, '.')]] : []),
       ['성별', gender],
       ['품종', breed],
-      ['주증상', document.getElementById('symptoms').value.trim().slice(0, 40) + (document.getElementById('symptoms').value.trim().length > 40 ? '…' : '')],
+      ['주증상', payload.symptoms.slice(0, 40) + (payload.symptoms.length > 40 ? '…' : '')],
     ];
 
     const summaryEl = document.getElementById('successSummary');
@@ -1836,17 +1871,35 @@
       return;
     }
     const isChange = selectedChangeType === 'change';
+
+    const payload = {
+      type:      isChange ? 'change' : 'cancel',
+      ownerName: document.getElementById('cOwnerName').value.trim(),
+      phone:     document.getElementById('cPhone').value,
+      petName:   document.getElementById('cPetName').value.trim(),
+      apptDate:  formatDT(document.getElementById('cApptDate').value),
+      newDate:   isChange ? formatDT(document.getElementById('cNewDate').value) : '',
+      reason:    isChange
+        ? document.getElementById('cChangeReason').value.trim()
+        : document.getElementById('cCancelReason').value.trim()
+    };
+
+    fetch('https://script.google.com/macros/s/AKfycbzwx85DjWxevvP4G622PUl_hwRbkukA7E7ZKhQuLBXC4gEeMNff76qS0QOgSRTp135ZYg/exec', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    }).catch(() => {});
+
     const summary = [
       ['유형', isChange ? '예약 변경' : '예약 취소'],
-      ['보호자', document.getElementById('cOwnerName').value.trim()],
-      ['전화번호', document.getElementById('cPhone').value],
-      ['반려동물', document.getElementById('cPetName').value.trim()],
-      ['기존 예약', formatDT(document.getElementById('cApptDate').value)],
+      ['보호자', payload.ownerName],
+      ['전화번호', payload.phone],
+      ['반려동물', payload.petName],
+      ['기존 예약', payload.apptDate],
       ...(isChange ? [
-        ['변경 희망일', formatDT(document.getElementById('cNewDate').value)],
-        ['변경 사유', document.getElementById('cChangeReason').value.trim().slice(0,40) + (document.getElementById('cChangeReason').value.trim().length > 40 ? '…' : '')]
+        ['변경 희망일', payload.newDate],
+        ['변경 사유', payload.reason.slice(0,40) + (payload.reason.length > 40 ? '…' : '')]
       ] : [
-        ['취소 사유', document.getElementById('cCancelReason').value.trim().slice(0,40) + (document.getElementById('cCancelReason').value.trim().length > 40 ? '…' : '')]
+        ['취소 사유', payload.reason.slice(0,40) + (payload.reason.length > 40 ? '…' : '')]
       ])
     ];
     document.getElementById('changeSuccessIcon').textContent = isChange ? '📅' : '✅';
