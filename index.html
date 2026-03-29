@@ -1573,7 +1573,7 @@
     // 구글 시트 전송 (no-cors)
     const form1 = new FormData();
     form1.append('data', JSON.stringify(payload));
-    fetch('https://script.google.com/macros/s/AKfycbzwx85DjWxevvP4G622PUl_hwRbkukA7E7ZKhQuLBXC4gEeMNff76qS0QOgSRTp135ZYg/exec', {
+    fetch('https://script.google.com/macros/s/AKfycbzSiHPD2iOWBAetFSpG6RUn34s_S0Vn6ZXSMT88CkpidvWikqD2VcAaY9PqEGJCbuDqJA/exec', {
       method: 'POST',
       mode: 'no-cors',
       body: JSON.stringify(payload)
@@ -1888,7 +1888,7 @@
         : document.getElementById('cCancelReason').value.trim()
     };
 
-    fetch('https://script.google.com/macros/s/AKfycbzwx85DjWxevvP4G622PUl_hwRbkukA7E7ZKhQuLBXC4gEeMNff76qS0QOgSRTp135ZYg/exec', {
+    fetch('https://script.google.com/macros/s/AKfycbzSiHPD2iOWBAetFSpG6RUn34s_S0Vn6ZXSMT88CkpidvWikqD2VcAaY9PqEGJCbuDqJA/exec', {
       method: 'POST',
       mode: 'no-cors',
       body: JSON.stringify(payload)
