@@ -1,56 +1,1942 @@
-function doPost(e) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let data;
-  
-  try {
-    data = JSON.parse(e.postData.contents);
-  } catch(err) {
-    return ContentService
-      .createTextOutput(JSON.stringify({ result: 'error', message: err.toString() }))
-      .setMimeType(ContentService.MimeType.JSON);
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>진료 예약 | 원헬스동물의료센터</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Yeon+Sung&family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --teal:      #4a8c3f;
+      --teal-mid:  #5aa34e;
+      --teal-light:#c8e6c0;
+      --teal-pale: #f2f9f0;
+      --navy:      #2d4a28;
+      --gold:      #c9a84c;
+      --text:      #2a3d26;
+      --muted:     #6b8465;
+      --border:    #b8d9b0;
+      --white:     #ffffff;
+      --error:     #c0392b;
+      --success:   #4a8c3f;
+      --radius:    10px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background-color: var(--teal-pale);
+      background-image:
+        radial-gradient(circle, rgba(74,140,63,0.18) 1.5px, transparent 1.5px),
+        radial-gradient(circle, rgba(74,140,63,0.12) 1.5px, transparent 1.5px);
+      background-size: 36px 36px, 18px 18px;
+      background-position: 0 0, 9px 9px;
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: #fff;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 62px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 2px solid var(--teal-light);
+      box-shadow: 0 2px 10px rgba(74,140,63,0.08);
+    }
+    .logo-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .logo-icon-wrap {
+      width: 38px; height: 38px;
+      background: var(--teal-light);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+    .logo-text-wrap {}
+    .logo-text {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--navy);
+      line-height: 1.3;
+      letter-spacing: -0.3px;
+    }
+    .logo-sub {
+      font-size: 10px;
+      color: var(--muted);
+      font-weight: 400;
+      letter-spacing: 0.2px;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--teal-pale);
+      border: 1px solid var(--teal-light);
+      border-radius: 20px;
+      padding: 5px 12px;
+    }
+    .header-right span {
+      font-size: 11px;
+      color: var(--teal);
+      font-weight: 600;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      background: var(--teal);
+      padding: 40px 24px 52px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: -1px; left: 0; right: 0;
+      height: 28px;
+      background: var(--teal-pale);
+      clip-path: ellipse(52% 100% at 50% 100%);
+    }
+    /* 배경 원형 장식 */
+    .hero::before {
+      content: '';
+      position: absolute;
+      width: 300px; height: 300px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.05);
+      top: -80px; right: -60px;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.35);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 16px;
+      border-radius: 30px;
+      margin-bottom: 16px;
+      position: relative;
+      letter-spacing: 0.3px;
+      backdrop-filter: blur(4px);
+    }
+    .hero h1 {
+      font-size: clamp(22px, 5.5vw, 32px);
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.55;
+      position: relative;
+      margin-bottom: 10px;
+      letter-spacing: -0.5px;
+    }
+    .hero h1 em {
+      font-style: normal;
+      background: rgba(255,255,255,0.22);
+      border-radius: 8px;
+      padding: 1px 10px;
+    }
+    .hero p {
+      color: rgba(255,255,255,0.82);
+      font-size: 13px;
+      line-height: 1.9;
+      position: relative;
+      max-width: 320px;
+      margin: 0 auto;
+    }
+
+    /* ── STEPS ── */
+    .steps-bar {
+      background: var(--white);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex;
+      justify-content: center;
+      gap: 0;
+    }
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .step.active { color: var(--teal); }
+    .step.done { color: var(--teal); }
+    .step-num {
+      width: 26px; height: 26px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      background: #e8efe6;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+    .step.active .step-num {
+      background: var(--teal);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(74,140,63,0.28);
+    }
+    .step.done .step-num {
+      background: var(--teal);
+      color: #fff;
+    }
+    .step-divider {
+      width: 28px;
+      height: 1px;
+      background: var(--border);
+      align-self: center;
+      margin: 0 4px;
+    }
+
+    /* ── MAIN LAYOUT ── */
+    .main {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 32px 20px 60px;
+    }
+
+    /* ── SECTION CARD ── */
+    .section-card {
+      background: var(--white);
+      border-radius: 20px;
+      padding: 26px 22px;
+      margin-bottom: 14px;
+      box-shadow: 0 3px 14px rgba(74,140,63,0.08);
+      border: 1.5px solid rgba(184,217,176,0.7);
+    }
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+    .section-icon {
+      width: 34px; height: 34px;
+      background: var(--teal-light);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+    .section-title h2 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--navy);
+    }
+    .section-title p {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* ── FORM FIELDS ── */
+    .field-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .field-group.single { grid-template-columns: 1fr; }
+    .field-group.three { grid-template-columns: 1fr 1fr 1fr; }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .field.full { grid-column: 1 / -1; }
+
+    label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--navy);
+      letter-spacing: 0.2px;
+    }
+    label .req {
+      color: var(--teal);
+      margin-left: 2px;
+    }
+
+    input, select, textarea {
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      background: var(--teal-pale);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 11px 14px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      width: 100%;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    input::placeholder, textarea::placeholder {
+      color: #aab8be;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--teal);
+      background: var(--white);
+      box-shadow: 0 0 0 3px rgba(26,122,110,0.12);
+    }
+    input.error, select.error, textarea.error {
+      border-color: var(--error);
+      background: #fff8f8;
+      box-shadow: 0 0 0 3px rgba(192,57,43,0.08);
+    }
+    .error-msg {
+      font-size: 11px;
+      color: var(--error);
+      font-weight: 500;
+      display: none;
+    }
+    .error-msg.show { display: block; }
+
+    /* select arrow */
+    .select-wrap { position: relative; }
+    .select-wrap::after {
+      content: '▾';
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 12px;
+      pointer-events: none;
+    }
+    .select-wrap select { padding-right: 36px; }
+
+    /* radio gender */
+    .radio-group {
+      display: flex;
+      gap: 10px;
+    }
+    .radio-btn {
+      flex: 1;
+      position: relative;
+    }
+    .radio-btn input[type="radio"] {
+      position: absolute;
+      opacity: 0;
+      width: 0; height: 0;
+    }
+    .radio-btn label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 8px;
+      background: var(--teal-pale);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--muted);
+      transition: all 0.18s;
+    }
+    .radio-btn input[type="radio"]:checked + label {
+      background: var(--teal-light);
+      border-color: var(--teal);
+      color: var(--teal);
+      font-weight: 600;
+    }
+    .radio-btn label:hover {
+      border-color: var(--teal-mid);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+      line-height: 1.6;
+    }
+
+    /* ── BREED SECTION ── */
+    .breed-toggle {
+      display: flex;
+      gap: 0;
+      background: var(--teal-pale);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .breed-tab {
+      flex: 1;
+      padding: 9px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.18s;
+      border: none;
+      background: transparent;
+      font-family: 'Noto Sans KR', sans-serif;
+    }
+    .breed-tab.active {
+      background: var(--teal);
+      color: #fff;
+    }
+    .breed-select-wrap { display: none; }
+    .breed-select-wrap.show { display: block; }
+    .breed-input-wrap { display: none; }
+    .breed-input-wrap.show { display: block; }
+
+    /* ── SPECIES TABS ── */
+    .species-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .species-tab {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1.5px solid var(--border);
+      background: var(--teal-pale);
+      color: var(--muted);
+      transition: all 0.18s;
+    }
+    .species-tab.active {
+      background: var(--teal);
+      border-color: var(--teal);
+      color: #fff;
+    }
+
+    /* ── NOTICE BOX ── */
+    .notice {
+      background: linear-gradient(135deg, #eef7eb, #dff0d8);
+      border: 1.5px solid var(--teal-light);
+      border-left: 4px solid var(--teal);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .notice-icon { font-size: 17px; flex-shrink: 0; margin-top: 2px; }
+    .notice-text { font-size: 12.5px; color: var(--text); line-height: 1.75; font-weight: 400; }
+    .notice-text strong { font-weight: 700; color: var(--teal); }
+
+    /* ── SUBMIT BUTTON ── */
+    .submit-wrap {
+      margin-top: 8px;
+    }
+    .btn-submit {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, var(--teal) 0%, var(--teal-mid) 100%);
+      color: #fff;
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 4px 18px rgba(26,122,110,0.3);
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-submit:hover {
+      opacity: 0.92;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 24px rgba(26,122,110,0.38);
+    }
+    .btn-submit:active { transform: translateY(0); }
+    .btn-submit::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, rgba(255,255,255,0.08), transparent);
+    }
+    .btn-note {
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 10px;
+      line-height: 1.6;
+    }
+
+    /* ── SUCCESS ── */
+    .success-screen {
+      display: none;
+      text-align: center;
+      padding: 48px 24px;
+    }
+    .success-screen.show { display: block; }
+    .success-icon-wrap {
+      width: 80px; height: 80px;
+      background: var(--teal-light);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
+      font-size: 36px;
+      animation: pop 0.5s cubic-bezier(0.175,0.885,0.32,1.275);
+    }
+    @keyframes pop {
+      0% { transform: scale(0); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .success-title {
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 10px;
+    }
+    .success-body {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.8;
+      margin-bottom: 28px;
+    }
+    .success-info {
+      background: var(--teal-pale);
+      border: 1px solid var(--teal-light);
+      border-radius: 12px;
+      padding: 18px;
+      text-align: left;
+      margin-bottom: 24px;
+    }
+    .success-info-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      padding: 5px 0;
+      border-bottom: 1px solid var(--teal-light);
+    }
+    .success-info-row:last-child { border-bottom: none; }
+    .success-info-row span:first-child { color: var(--muted); font-weight: 500; }
+    .success-info-row span:last-child { color: var(--navy); font-weight: 600; }
+    .btn-reset {
+      background: var(--navy);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 28px;
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* ── PAGE TAB SWITCHER ── */
+    .page-tabs {
+      display: flex;
+      gap: 10px;
+      padding: 20px 20px 0;
+      max-width: 640px;
+      margin: 0 auto;
+    }
+    .page-tab {
+      flex: 1;
+      padding: 13px 10px;
+      border-radius: 14px 14px 0 0;
+      border: 1.5px solid var(--border);
+      border-bottom: none;
+      background: #e8f0e5;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.18s;
+      position: relative;
+      bottom: -2px;
+    }
+    .page-tab:hover { background: var(--teal-light); color: var(--teal); }
+    .page-tab.active {
+      background: var(--white);
+      color: var(--teal);
+      border-color: var(--border);
+      border-bottom-color: var(--white);
+      z-index: 1;
+    }
+    .page-tab .tab-icon { font-size: 16px; display: block; margin-bottom: 3px; }
+
+    .page-panel { display: none; }
+    .page-panel.active { display: block; }
+
+    /* ── 변경/취소 타입 선택 ── */
+    .change-type-wrap {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .change-type-btn {
+      flex: 1;
+      padding: 14px 10px;
+      border-radius: 12px;
+      border: 2px solid var(--border);
+      background: var(--teal-pale);
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.18s;
+      font-family: 'Noto Sans KR', sans-serif;
+    }
+    .change-type-btn .ct-icon { font-size: 22px; display: block; margin-bottom: 5px; }
+    .change-type-btn:hover { border-color: var(--teal); background: var(--teal-light); color: var(--teal); }
+    .change-type-btn.selected-change {
+      border-color: #4a7fbf;
+      background: #eaf2ff;
+      color: #2d5fa3;
+    }
+    .change-type-btn.selected-cancel {
+      border-color: #c0392b;
+      background: #fff3f3;
+      color: #c0392b;
+    }
+
+    .change-form-wrap { display: none; animation: slideDown 0.22s ease; }
+    .change-form-wrap.show { display: block; }
+
+    /* 변경 필드 구분선 */
+    .form-divider {
+      border: none;
+      border-top: 1.5px dashed var(--border);
+      margin: 18px 0;
+    }
+
+    /* ── ADD PET BUTTON ── */
+    .btn-add-pet {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 11px;
+      background: var(--teal-pale);
+      border: 1.5px dashed var(--teal-mid);
+      border-radius: var(--radius);
+      color: var(--teal);
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.18s;
+      margin-top: 6px;
+    }
+    .btn-add-pet:hover { background: var(--teal-light); }
+    .extra-pet-card {
+      border: 1.5px solid var(--teal-light);
+      border-radius: 12px;
+      padding: 18px 16px 14px;
+      margin-top: 14px;
+      background: var(--teal-pale);
+      position: relative;
+      animation: slideDown 0.25s ease;
+    }
+    @keyframes slideDown {
+      from { opacity:0; transform: translateY(-8px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+    .extra-pet-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .extra-pet-label { font-size: 13px; font-weight: 700; color: var(--teal); }
+    .btn-remove-pet {
+      background: none; border: none; cursor: pointer;
+      color: var(--muted); font-size: 18px; line-height: 1; padding: 0 4px;
+      transition: color 0.15s;
+    }
+    .btn-remove-pet:hover { color: var(--error); }
+
+    /* ── 취소 빠른선택 태그 ── */
+    .cancel-tag {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1.5px solid var(--border);
+      background: var(--teal-pale);
+      color: var(--muted);
+      transition: all 0.18s;
+      user-select: none;
+    }
+    .cancel-tag.selected {
+      background: #fff3f3;
+      border-color: #c0392b;
+      color: #c0392b;
+      font-weight: 600;
+    }
+
+    /* ── 개인정보 동의 ── */
+    .privacy-section {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 22px 24px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 12px rgba(15,45,58,0.06);
+      border: 1px solid rgba(204,223,224,0.6);
+    }
+    .privacy-title {
+      font-size: 15px; font-weight: 700; color: var(--navy);
+      margin-bottom: 14px;
+    }
+    .privacy-item {
+      border: 1.5px solid var(--border);
+      border-radius: 10px; overflow: hidden; margin-bottom: 10px;
+    }
+    .privacy-item:last-of-type { margin-bottom: 0; }
+    .privacy-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 13px 16px; cursor: pointer;
+      background: var(--teal-pale); user-select: none; transition: background 0.15s;
+    }
+    .privacy-header:hover { background: var(--teal-light); }
+    .privacy-checkbox {
+      width: 20px; height: 20px;
+      border: 2px solid var(--border); border-radius: 5px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: all 0.15s; background: #fff; cursor: pointer;
+    }
+    .privacy-checkbox.checked { background: var(--teal); border-color: var(--teal); }
+    .privacy-checkbox.checked::after { content: "✓"; color: #fff; font-size: 12px; font-weight: 700; }
+    .privacy-header-text { flex: 1; font-size: 13px; font-weight: 600; color: var(--navy); }
+    .privacy-required-badge {
+      font-size: 10px; font-weight: 700;
+      background: var(--teal); color: #fff; padding: 2px 7px; border-radius: 10px;
+    }
+    .privacy-toggle-icon { font-size: 12px; color: var(--muted); transition: transform 0.2s; }
+    .privacy-toggle-icon.open { transform: rotate(180deg); }
+    .privacy-body {
+      display: none; padding: 14px 16px; background: #fff;
+      border-top: 1px solid var(--border);
+      font-size: 12px; color: var(--text); line-height: 1.85;
+    }
+    .privacy-body.show { display: block; }
+    .privacy-body ol { padding-left: 18px; }
+    .privacy-body ol li { margin-bottom: 6px; }
+    .privacy-error { font-size: 11px; color: var(--error); font-weight: 500; margin-top: 8px; display: none; }
+    .privacy-error.show { display: block; }
+
+    /* ── 품종 직접입력 ── */
+    .breed-custom-input {
+      display: none;
+      margin-top: 8px;
+      animation: slideDown 0.2s ease;
+    }
+    .breed-custom-input.show { display: block; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--teal);
+      color: rgba(255,255,255,0.7);
+      text-align: center;
+      padding: 24px 20px;
+      font-size: 12px;
+      line-height: 1.9;
+    }
+    footer strong { color: #fff; font-size: 13px; font-weight: 700; }
+    .footer-paws { font-size: 18px; letter-spacing: 4px; margin-bottom: 6px; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 480px) {
+      .field-group { grid-template-columns: 1fr; }
+      .field-group.three { grid-template-columns: 1fr 1fr; }
+      .section-card { padding: 22px 18px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo-wrap">
+    <div class="logo-icon-wrap">🐾</div>
+    <div class="logo-text-wrap">
+      <div class="logo-text">원헬스동물의료센터</div>
+      <div class="logo-sub">One Health Animal Medical Center · 울산</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span>⏰</span>
+    <span>17년 전통</span>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+
+    <div class="hero-badge">🏥 원헬스 온라인 예약 센터</div>
+  <h1>우리 아이 건강,<br><em>원헬스</em>에 맡겨주세요 🐾</h1>
+  <p>진료 예약부터 예약 변경·취소까지<br>간편하게 신청하세요.</p>
+</section>
+
+<!-- PAGE TABS -->
+<div class="page-tabs">
+  <div class="page-tab active" id="tabNew" onclick="switchPage('new')">
+    <span class="tab-icon">📋</span>진료 예약
+  </div>
+  <div class="page-tab" id="tabChange" onclick="switchPage('change')">
+    <span class="tab-icon">🔄</span>예약 변경·취소
+  </div>
+</div>
+
+<!-- PANEL: 예약 -->
+<div class="page-panel active" id="panelNew">
+
+<!-- STEPS -->
+<div class="steps-bar">
+  <div class="step active" id="step1">
+    <div class="step-num">1</div>
+    <span>보호자 정보</span>
+  </div>
+  <div class="step-divider"></div>
+  <div class="step" id="step2">
+    <div class="step-num">2</div>
+    <span>반려동물 정보</span>
+  </div>
+  <div class="step-divider"></div>
+  <div class="step" id="step3">
+    <div class="step-num">3</div>
+    <span>증상 입력</span>
+  </div>
+</div>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- NOTICE -->
+  <div class="notice">
+    <div class="notice-icon">💡</div>
+    <div class="notice-text">
+      <strong>모든 항목은 필수 입력 사항입니다.</strong><br>
+      예약 확정 시 등록해 주신 전화번호 혹은 카카오톡 채널로 확정 연락드리고 있습니다.
+    </div>
+  </div>
+
+  <form id="reservationForm" novalidate>
+
+    <!-- SECTION 1: 보호자 정보 -->
+    <div class="section-card">
+      <div class="section-title">
+        <div class="section-icon">👤</div>
+        <div>
+          <h2>보호자 정보</h2>
+          <p>예약 확인 연락을 위해 필요합니다</p>
+        </div>
+      </div>
+      <div class="field-group">
+        <div class="field">
+          <label for="ownerName">보호자 성함 <span class="req">*</span></label>
+          <input type="text" id="ownerName" placeholder="홍길동" autocomplete="name" />
+          <span class="error-msg" id="ownerName-err">성함을 입력해 주세요.</span>
+        </div>
+        <div class="field">
+          <label for="phone">전화번호 <span class="req">*</span></label>
+          <input type="tel" id="phone" placeholder="010-0000-0000" autocomplete="tel" inputmode="numeric" />
+          <span class="error-msg" id="phone-err">올바른 전화번호를 입력해 주세요.</span>
+        </div>
+      </div>
+      <div class="field" style="margin-top:14px">
+        <label for="ownerAddress">주소 <span class="req">*</span></label>
+        <input type="text" id="ownerAddress" placeholder="예: 울산광역시 남구 삼산로 ○○" autocomplete="street-address" />
+        <span class="error-msg" id="ownerAddress-err">주소를 입력해 주세요.</span>
+      </div>
+    </div>
+
+    <!-- SECTION 2: 반려동물 정보 -->
+    <div class="section-card">
+      <div class="section-title">
+        <div class="section-icon">🐾</div>
+        <div>
+          <h2>반려동물 정보</h2>
+          <p>진료 준비를 위해 필요합니다</p>
+        </div>
+      </div>
+
+      <div class="field-group" style="margin-bottom:14px">
+        <div class="field">
+          <label for="petName">반려동물 이름 <span class="req">*</span></label>
+          <input type="text" id="petName" placeholder="예: 초코, 별이" />
+          <span class="error-msg" id="petName-err">이름을 입력해 주세요.</span>
+        </div>
+        <div class="field">
+          <label for="petAge">나이 <span class="req">*</span></label>
+          <div class="select-wrap">
+            <select id="petAge">
+              <option value="">나이 선택</option>
+              <option value="1세 미만">1세 미만 (퍼피/키튼)</option>
+              <option value="1세">1세</option>
+              <option value="2세">2세</option>
+              <option value="3세">3세</option>
+              <option value="4세">4세</option>
+              <option value="5세">5세</option>
+              <option value="6세">6세</option>
+              <option value="7세">7세</option>
+              <option value="8세">8세</option>
+              <option value="9세">9세</option>
+              <option value="10세">10세</option>
+              <option value="11세">11세</option>
+              <option value="12세">12세</option>
+              <option value="13세">13세</option>
+              <option value="14세">14세</option>
+              <option value="15세 이상">15세 이상 (시니어)</option>
+            </select>
+          </div>
+          <span class="error-msg" id="petAge-err">나이를 선택해 주세요.</span>
+        </div>
+      </div>
+
+      <!-- 생년월일 (선택) -->
+      <div class="field" style="margin-bottom:14px">
+        <label for="petBirthdate">생년월일 <span style="font-size:11px;font-weight:400;color:var(--muted);margin-left:4px">(선택 입력)</span></label>
+        <input type="date" id="petBirthdate" />
+        <span style="font-size:11px;color:var(--muted);margin-top:3px;display:block;">정확한 생년월일을 아시면 입력해 주세요.</span>
+      </div>
+
+      <!-- 성별 -->
+      <div class="field" style="margin-bottom:14px">
+        <label>성별 <span class="req">*</span></label>
+        <div class="radio-group" id="genderGroup">
+          <div class="radio-btn">
+            <input type="radio" name="gender" id="male" value="수컷" />
+            <label for="male">♂ 수컷</label>
+          </div>
+          <div class="radio-btn">
+            <input type="radio" name="gender" id="female" value="암컷" />
+            <label for="female">♀ 암컷</label>
+          </div>
+          <div class="radio-btn">
+            <input type="radio" name="gender" id="neutered_m" value="수컷(중성화)" />
+            <label for="neutered_m">수컷 (중성화)</label>
+          </div>
+          <div class="radio-btn">
+            <input type="radio" name="gender" id="neutered_f" value="암컷(중성화)" />
+            <label for="neutered_f">암컷 (중성화)</label>
+          </div>
+        </div>
+        <span class="error-msg" id="gender-err">성별을 선택해 주세요.</span>
+      </div>
+
+      <!-- 품종 -->
+      <div class="field">
+        <label>품종 <span class="req">*</span></label>
+        <!-- 종 탭 -->
+        <div class="species-tabs" style="margin-bottom:10px">
+          <div class="species-tab active" onclick="changeSpecies('dog', this)">🐶 강아지</div>
+          <div class="species-tab" onclick="changeSpecies('cat', this)">🐱 고양이</div>
+        </div>
+        <div class="select-wrap">
+          <select id="breedSelect" onchange="onBreedChange('breedSelect','breedCustom')">
+            <option value="">품종을 선택해 주세요</option>
+          </select>
+        </div>
+        <div class="breed-custom-input" id="breedCustom">
+          <input type="text" id="breedCustomText" placeholder="품종명을 직접 입력해 주세요 (예: 포메라니안+치와와 믹스)" />
+        </div>
+        <span class="error-msg" id="breed-err">품종을 선택해 주세요.</span>
+      </div>
+    </div>
+
+    <!-- 추가 반려동물 -->
+    <div id="extraPetsContainer"></div>
+    <button type="button" class="btn-add-pet" id="btnAddPet" onclick="addExtraPet()">
+      ＋ 반려동물 추가 (다견·다묘 가정)
+    </button>
+
+    <!-- SECTION 2.5: 초진/재진 -->
+    <div class="section-card">
+      <div class="section-title">
+        <div class="section-icon">🏥</div>
+        <div>
+          <h2>내원 구분</h2>
+          <p>처음 방문이신지 알려주세요</p>
+        </div>
+      </div>
+      <div class="field">
+        <label>초진 / 재진 <span class="req">*</span></label>
+        <div class="radio-group" id="visitTypeGroup">
+          <div class="radio-btn">
+            <input type="radio" name="visitType" id="firstVisit" value="초진" />
+            <label for="firstVisit">🆕 초진 (처음 방문)</label>
+          </div>
+          <div class="radio-btn">
+            <input type="radio" name="visitType" id="revisit" value="재진" />
+            <label for="revisit">🔄 재진 (기존 환자)</label>
+          </div>
+        </div>
+        <span class="error-msg" id="visitType-err">초진/재진을 선택해 주세요.</span>
+      </div>
+    </div>
+
+    <!-- SECTION 3: 주증상 -->
+    <div class="section-card">
+      <div class="section-title">
+        <div class="section-icon">📋</div>
+        <div>
+          <h2>주증상</h2>
+          <p>방문 전 진료 준비에 도움이 됩니다</p>
+        </div>
+      </div>
+
+      <!-- 빠른 선택 -->
+      <div class="field" style="margin-bottom:14px">
+        <label style="margin-bottom:8px">빠른 증상 선택 <span style="color:var(--muted);font-weight:400">(중복 선택 가능)</span></label>
+        <div id="quickSymptoms" style="display:flex;flex-wrap:wrap;gap:8px;">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="symptoms">주증상 상세 설명 <span class="req">*</span></label>
+        <textarea id="symptoms" placeholder="예: 3일 전부터 구토를 2-3회 하고 있습니다. 식욕이 떨어지고 기운이 없어 보입니다."></textarea>
+        <span class="error-msg" id="symptoms-err">주증상을 입력해 주세요.</span>
+      </div>
+    </div>
+
+    <!-- 개인정보 동의 -->
+    <div class="privacy-section">
+      <div class="privacy-title">🔒 개인정보 수집·이용 및 제3자 제공 동의</div>
+
+      <!-- 동의 1: 수집·이용 -->
+      <div class="privacy-item">
+        <div class="privacy-header" onclick="togglePrivacy('p1')">
+          <div class="privacy-checkbox" id="chk-p1"></div>
+          <div class="privacy-header-text">개인정보 수집·이용 동의</div>
+          <span class="privacy-required-badge">필수</span>
+          <span class="privacy-toggle-icon" id="icon-p1">▾</span>
+        </div>
+        <div class="privacy-body" id="body-p1">
+          <ol>
+            <li>병원은 아래의 개인 정보를 필수 항목으로 수집하고 있습니다.<br><strong>(이름, 주소, 생년월일, 연락처/보험코드, 내방기록, 반려동물 정보 및 진료내역)</strong></li>
+            <li>병원의 반려동물 진료 서비스 : 반려동물 관리, 치료 서비스 제공</li>
+            <li>병원의 반려동물 진료 외 서비스 : 고지사항 전달, 예약, 진료 예정일 안내</li>
+            <li>병원 민원 확인, 진료 만족도 조사, 보험 관리, 공지사항 전달 등 회원 관리 및 본인 인증</li>
+            <li>병원의 국세 등 조세채권의 확정, 채권행사 등 법률상 문제 해결</li>
+            <li>병원 서비스 개발, 마케팅/광고 : 다른 서비스 개발, 회원별 맞춤 서비스 제공, 마케팅 및 광고 전달</li>
+            <li>진료 내역, 내역 현황, 진료 예정일 등 관리 및 알림, 공지사항 전달, 쿠폰 관리 등 온라인 플랫폼 내에서의 고객 관리 서비스 제공</li>
+            <li>회사가 제공하는 쇼핑몰 서비스의 이용에 따르는 본인 확인, 연령 제한 서비스 제공 등</li>
+            <li>회사가 제공하는 쇼핑몰 서비스에서 거래의 원활한 진행, 본인의사 확인, 불만처리, 새로운 상품·서비스 정보와 고지사항 안내, 상품과 경품 배송을 위한 배송지 확인, 대금결제 서비스 제공</li>
+            <li>개인정보 보유 및 이용 기간 : 회원 자격이 유지되는 동안 보관하며, 회원 탈퇴 또는 수집·이용 목적이 달성된 경우 지체없이 파기합니다.<br>단, 예외사항으로 서비스 부정이용 행위 방지(사유 발생일로부터 3개월), 관계 법령에 의하여 보존할 필요가 있는 경우(상법 등 영업상 중요장부: 10년) 등 법령에서 정한 기간 동안 보관합니다.</li>
+            <li>고객은 개인정보 수집 및 이용에 대하여 동의를 거부할 권리가 있습니다. 다만, 동의 거부 시 서비스 이용이 불가능할 수 있습니다.</li>
+            <li>병원은 개인정보 보호법 등 관련 법상의 규정에 준수하며, 병원 내 이벤트 및 활용을 위해 반드시 필요한 범위 내에서 환자의 치료와 관련 자료들을 수집·이용합니다.<br><strong>(수집 및 이용 목적: 환자 케이스 작성, 향후 진료 방향 개선을 위한 치료 후기 작성, 병원 이벤트 및 경품 제공, 병원 SNS 채널 등에 활용)</strong></li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- 동의 2: 제3자 제공 -->
+      <div class="privacy-item">
+        <div class="privacy-header" onclick="togglePrivacy('p2')">
+          <div class="privacy-checkbox" id="chk-p2"></div>
+          <div class="privacy-header-text">개인정보 제3자 제공 동의</div>
+          <span class="privacy-required-badge">필수</span>
+          <span class="privacy-toggle-icon" id="icon-p2">▾</span>
+        </div>
+        <div class="privacy-body" id="body-p2">
+          <ol>
+            <li>제공 받는 자 : <strong>원헬스동물의료센터, (주) 우리엔</strong></li>
+            <li>병원은 아래의 개인정보를 필수 항목으로 제공하고 있습니다.<br>
+              <strong>(이름, 주소, 생년월일, 연락처, 보험코드, 내방기록, 반려동물 정보 및 진료 예정일)</strong><br>
+              14세 미만자의 경우 추가 수집 항목: 법정 대리인 이름, 이메일, 주소, 전화번호<br>
+              단체의 경우: 단체 아이디, 관리자 아이디, 회사명, 대표자명, 전화번호, 이메일, 주소
+            </li>
+            <li>제공 받는 자의 이용 목적
+              <ul style="padding-left:16px;margin-top:4px">
+                <li>진료 내역, 예약 현황, 진료 예정일 등 관리 및 알림, 공지사항 전달, 쿠폰 관리 등 온라인 플랫폼 내 고객 관리 서비스 제공</li>
+                <li>민원 확인, 진료 만족도 조사, 보험 관리, 공지사항 전달 등 회원 관리 및 본인 인증</li>
+                <li>국세 등 조세채권의 확정, 채권 행사 등 법률상 분쟁 해결</li>
+                <li>다른 서비스 개발, 회원별 맞춤 서비스 제공, 마케팅 및 광고 전달</li>
+              </ul>
+            </li>
+            <li>보유 및 이용 기간 : 회원 자격이 유지되는 동안 보관하며, 회원 탈퇴 또는 수집·이용 목적이 달성된 경우 지체없이 파기합니다.<br>단, 예외사항으로 서비스 부정이용 행위 방지(사유 발생일로부터 3개월), 관계 법령에 의하여 보존할 필요가 있는 경우(상법 등 영업상 중요장부: 10년) 등 법령에서 정한 기간 동안 보관합니다.</li>
+            <li>고객은 개인정보 제3자 제공에 대하여 동의를 거부할 권리가 있습니다. 다만, 동의 거부 시 서비스 이용이 불가능할 수 있습니다.</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="privacy-error" id="privacy-err">개인정보 수집·이용 및 제3자 제공에 모두 동의해 주세요.</div>
+    </div>
+
+    <!-- SUBMIT -->
+    <div class="submit-wrap">
+      <button type="submit" class="btn-submit">예약 신청하기 →</button>
+      <p class="btn-note">예약 신청 후 영업시간 내 순차적으로 확인 연락드립니다.<br>당일 예약은 전화로 문의해 주세요 📞 052-247-7975 (내선 2번)</p>
+    </div>
+  </form>
+
+  <!-- SUCCESS -->
+  <div class="success-screen" id="successScreen">
+    <div class="section-card">
+      <div class="success-icon-wrap">✅</div>
+      <div class="success-title">예약 신청이 완료되었습니다</div>
+      <div class="success-body">입력하신 전화번호로 예약 확정 연락을 드리겠습니다.<br>영업시간: 평일 09:00–21:00 / 일·공휴일 10:30–19:00</div>
+      <div class="success-info" id="successSummary"></div>
+      <button class="btn-reset" onclick="resetForm()">새로운 예약 신청</button>
+    </div>
+  </div>
+
+</div><!-- /panelNew -->
+
+<!-- PANEL: 변경·취소 -->
+<div class="page-panel" id="panelChange">
+
+  <div class="notice">
+    <div class="notice-icon">📌</div>
+    <div class="notice-text">
+      <strong>예약 변경·취소 신청</strong><br>
+      접수 후 영업시간 내 확인하여 연락드립니다. 당일 변경·취소는 전화로 문의해 주세요.
+    </div>
+  </div>
+
+  <!-- 변경 / 취소 선택 -->
+  <div class="section-card">
+    <div class="section-title">
+      <div class="section-icon">🔄</div>
+      <div>
+        <h2>신청 유형 선택</h2>
+        <p>변경 또는 취소 중 선택해 주세요</p>
+      </div>
+    </div>
+    <div class="change-type-wrap">
+      <button type="button" class="change-type-btn" id="btnTypeChange" onclick="selectChangeType('change')">
+        <span class="ct-icon">📅</span>예약 변경
+      </button>
+      <button type="button" class="change-type-btn" id="btnTypeCancel" onclick="selectChangeType('cancel')">
+        <span class="ct-icon">❌</span>예약 취소
+      </button>
+    </div>
+    <span class="error-msg" id="changeType-err" style="display:none">유형을 선택해 주세요.</span>
+  </div>
+
+  <form id="changeForm" novalidate>
+
+    <!-- 기본 정보 -->
+    <div class="notice" style="margin-bottom:14px">
+      <div class="notice-icon">✏️</div>
+      <div class="notice-text">
+        <strong>예약 시 등록하신 보호자 정보와 동일하게 입력해 주세요.</strong><br>
+        성함·전화번호가 다를 경우 예약 확인이 어려울 수 있습니다.
+      </div>
+    </div>
+    <div class="section-card">
+      <div class="section-title">
+        <div class="section-icon">👤</div>
+        <div>
+          <h2>기본 정보</h2>
+          <p>예약 시 등록하신 정보와 동일하게 입력해 주세요</p>
+        </div>
+      </div>
+      <div class="field-group" style="margin-bottom:14px">
+        <div class="field">
+          <label for="cOwnerName">보호자 성함 <span class="req">*</span></label>
+          <input type="text" id="cOwnerName" placeholder="홍길동" />
+          <span class="error-msg" id="cOwnerName-err">성함을 입력해 주세요.</span>
+        </div>
+        <div class="field">
+          <label for="cPhone">전화번호 <span class="req">*</span></label>
+          <input type="tel" id="cPhone" placeholder="010-0000-0000" inputmode="numeric" />
+          <span class="error-msg" id="cPhone-err">올바른 전화번호를 입력해 주세요.</span>
+        </div>
+      </div>
+      <div class="field-group">
+        <div class="field">
+          <label for="cPetName">반려동물 이름 <span class="req">*</span></label>
+          <input type="text" id="cPetName" placeholder="예: 초코" />
+          <span class="error-msg" id="cPetName-err">이름을 입력해 주세요.</span>
+        </div>
+        <div class="field">
+          <label for="cApptDate">기존 예약 일자·시간 <span class="req">*</span></label>
+          <input type="datetime-local" id="cApptDate" />
+          <span class="error-msg" id="cApptDate-err">예약 일자·시간을 입력해 주세요.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 변경 상세 (변경 선택 시) -->
+    <div class="section-card change-form-wrap" id="changeDetailWrap">
+      <div class="section-title">
+        <div class="section-icon">📅</div>
+        <div>
+          <h2>변경 정보</h2>
+          <p>변경을 원하시는 일정을 알려주세요</p>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:14px">
+        <label for="cNewDate">변경 희망 일자·시간 <span class="req">*</span></label>
+        <input type="datetime-local" id="cNewDate" />
+        <span class="error-msg" id="cNewDate-err">변경 희망 일자·시간을 입력해 주세요.</span>
+      </div>
+      <hr class="form-divider">
+      <div class="field">
+        <label for="cChangeReason">변경 사유 <span class="req">*</span></label>
+        <textarea id="cChangeReason" placeholder="예: 일정이 갑자기 생겨 다음 날로 변경을 원합니다." style="min-height:80px"></textarea>
+        <span class="error-msg" id="cChangeReason-err">변경 사유를 입력해 주세요.</span>
+      </div>
+    </div>
+
+    <!-- 취소 상세 (취소 선택 시) -->
+    <div class="section-card change-form-wrap" id="cancelDetailWrap">
+      <div class="section-title">
+        <div class="section-icon">❌</div>
+        <div>
+          <h2>취소 사유</h2>
+          <p>취소 사유를 알려주세요</p>
+        </div>
+      </div>
+      <!-- 빠른 취소 사유 선택 -->
+      <div class="field" style="margin-bottom:14px">
+        <label style="margin-bottom:8px">빠른 선택 <span style="font-size:11px;font-weight:400;color:var(--muted)">(선택 시 아래 자동 입력)</span></label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px" id="cancelQuickTags">
+          <div class="cancel-tag" onclick="selectCancelTag(this, '일정 변경 불가')">일정 변경 불가</div>
+          <div class="cancel-tag" onclick="selectCancelTag(this, '자연 회복')">자연 회복</div>
+          <div class="cancel-tag" onclick="selectCancelTag(this, '타 병원 방문')">타 병원 방문</div>
+          <div class="cancel-tag" onclick="selectCancelTag(this, '개인 사정')">개인 사정</div>
+          <div class="cancel-tag" onclick="selectCancelTag(this, '반려동물 상태 악화로 응급 처치')">응급 처치</div>
+        </div>
+      </div>
+      <div class="field">
+        <label for="cCancelReason">취소 사유 상세 <span class="req">*</span></label>
+        <textarea id="cCancelReason" placeholder="취소 사유를 입력해 주세요." style="min-height:80px"></textarea>
+        <span class="error-msg" id="cCancelReason-err">취소 사유를 입력해 주세요.</span>
+      </div>
+    </div>
+
+    <!-- 제출 -->
+    <div class="submit-wrap" id="changeSubmitWrap" style="display:none">
+      <button type="submit" class="btn-submit" id="changeSubmitBtn">신청하기 →</button>
+      <p class="btn-note">접수 후 영업시간 내 순차적으로 확인 연락드립니다.</p>
+    </div>
+  </form>
+
+  <!-- 변경/취소 완료 화면 -->
+  <div class="success-screen" id="changeSuccessScreen">
+    <div class="section-card">
+      <div class="success-icon-wrap" id="changeSuccessIcon">✅</div>
+      <div class="success-title" id="changeSuccessTitle">신청이 완료되었습니다</div>
+      <div class="success-body">입력하신 전화번호로 확인 연락을 드리겠습니다.<br>영업시간: 평일 09:00–21:00 / 일·공휴일 10:30–19:00</div>
+      <div class="success-info" id="changeSummary"></div>
+      <button class="btn-reset" onclick="resetChangeForm()">처음으로 돌아가기</button>
+    </div>
+  </div>
+
+</main>
+</div><!-- /panelChange -->
+
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-paws">🐾🐾🐾</div>
+  <strong>원헬스동물의료센터</strong><br>
+  울산광역시 | 17년 전통 · 울산 대표 동물병원<br>
+  © 2025 One Health Animal Medical Center
+</footer>
+
+<script>
+  // ── 품종 데이터 ──
+  const breeds = {
+    dog: [
+      // ㄱ
+      '골든 리트리버','골든두들 (믹스)','그레이트 데인','그레이트 피레네즈',
+      // ㄴ
+      '노르웨이안 엘크하운드',
+      // ㄷ
+      '닥스훈트','달마시안','도베르만','도사견',
+      // ㄹ
+      '라브라도 리트리버','라사압소','러프 콜리',
+      // ㅁ
+      '말라뮤트 (알래스칸 말라뮤트)','말티즈','말티푸 (말티즈+푸들 믹스)',
+      '말티치 (말티즈+치와와 믹스)','말티포메 (말티즈+포메라니안 믹스)',
+      '말티숑 (말티즈+비숑 믹스)','믹스견 (혼혈)',
+      '미니어처 핀셔','미니어처 슈나우저','미니어처 불도그',
+      // ㅂ
+      '바셋 하운드','버니즈 마운틴 독','베들링턴 테리어',
+      '보더 콜리','보스턴 테리어','복서','볼로네즈',
+      '불독 (잉글리시)','불마스티프','비글','비숑 프리제',
+      // ㅅ
+      '사모예드','사뿐사뿐 (삽살개+푸들 믹스)','삽살개','세인트 버나드',
+      '셔틀랜드 쉽독 (쉘티)','스코티시 테리어','스피츠',
+      '시바견','시베리안 허스키','시추','시츄푸 (시추+푸들 믹스)',
+      // ㅇ
+      '아메리칸 불리','아메리칸 스태퍼드셔 테리어','아이리시 세터',
+      '아이리시 울프하운드','에어데일 테리어',
+      '웰시 코기 (코기)','웨스트 하이랜드 테리어 (웨스티)',
+      '잉글리시 세터','잉글리시 스프링어 스패니얼',
+      // ㅈ
+      '잭 러셀 테리어','저먼 셰퍼드 (독일 셰퍼드)','진돗개',
+      // ㅊ
+      '차우차우','치와와','치와푸 (치와와+푸들 믹스)',
+      // ㅋ
+      '카발리에 킹 찰스 스패니얼','코카스파니엘',
+      // ㅌ
+      '토이 푸들','티컵 푸들',
+      // ㅍ
+      '포메라니안','포메푸 (포메라니안+푸들 믹스)',
+      '포메치 (포메라니안+치와와 믹스)',
+      '프렌치 불독','플리 (헝가리안 목양견)',
+      // ㅎ
+      '하바네즈','허스키두들 (허스키+푸들 믹스)',
+      '호바와야 (믹스)','화이트 스위스 셰퍼드',
+      // 기타
+      '기타 믹스견 (직접 명시)'
+    ],
+    cat: [
+      // ㄱ
+      '고양이 믹스 (코리안 숏헤어)',
+      // ㄴ
+      '나폴레옹 (민우에트)','노르웨이 숲',
+      // ㄷ
+      '데번 렉스','도메스틱 롱헤어 (장모 혼혈)',
+      // ㄹ
+      '러시안 블루','랙돌',
+      // ㅁ
+      '메인쿤','먼치킨','믹스묘 (혼혈)',
+      // ㅂ
+      '버만','버미즈','봄베이','브리티시 롱헤어','브리티시 쇼트헤어',
+      // ㅅ
+      '샴','샤트룩스','셀커크 렉스','소말리','스코티시폴드',
+      '스코티시 스트레이트','스노우슈','스핑크스','시베리안','싱가푸라',
+      // ㅇ
+      '아메리칸 숏헤어','아메리칸 컬','아비시니안',
+      '오리엔탈 쇼트헤어','오시캣',
+      // ㅌ
+      '터키시 앙고라','터키시 밴','통키니즈','토이거',
+      // ㅍ
+      '페르시안',
+      // ㅎ
+      '하이랜더',
+      // 기타
+      '기타 믹스묘 (직접 명시)'
+    ],
+  };
+
+  let currentSpecies = 'dog';
+  let quickSelected = new Set();
+
+  function changeSpecies(species, el) {
+    currentSpecies = species;
+    el.closest('.species-tabs').querySelectorAll('.species-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    populateBreeds();
+    // 종 변경 시 직접입력 칸 숨김
+    const customWrap = document.getElementById('breedCustom');
+    if (customWrap) customWrap.classList.remove('show');
   }
 
-  if (data.type === 'reservation') {
-    const sheet = ss.getSheetByName('예약 신청');
-    sheet.appendRow([
-      new Date().toLocaleString('ko-KR'),
-      data.visitType    || '',
-      data.ownerName    || '',
-      data.phone        || '',
-      data.address      || '',
-      data.petName      || '',
-      data.petAge       || '',
-      data.petBirthdate || '',
-      data.gender       || '',
-      data.breed        || '',
-      data.symptoms     || '',
-      data.extraPets    || '',
-      '미확인'
-    ]);
+  function populateBreeds() {
+    const sel = document.getElementById('breedSelect');
+    sel.innerHTML = '<option value="">품종을 선택해 주세요</option>';
+    (breeds[currentSpecies] || []).forEach(b => {
+      const opt = document.createElement('option');
+      opt.value = b; opt.textContent = b;
+      sel.appendChild(opt);
+    });
   }
 
-  if (data.type === 'change' || data.type === 'cancel') {
-    const sheet = ss.getSheetByName('변경·취소');
-    sheet.appendRow([
-      new Date().toLocaleString('ko-KR'),
-      data.type === 'change' ? '예약변경' : '예약취소',
-      data.ownerName || '',
-      data.phone     || '',
-      data.petName   || '',
-      data.apptDate  || '',
-      data.newDate   || '',
-      data.reason    || '',
-      '미처리'
-    ]);
+  function getBreedValue() {
+    const sel = document.getElementById('breedSelect');
+    if (sel.value && sel.value.includes('직접 명시')) {
+      return document.getElementById('breedCustomText').value.trim();
+    }
+    return sel.value;
   }
 
-  return ContentService
-    .createTextOutput(JSON.stringify({ result: 'success' }))
-    .setMimeType(ContentService.MimeType.JSON);
-}
+  function onBreedChange(selectId, customId) {
+    const sel = document.getElementById(selectId);
+    const customWrap = document.getElementById(customId);
+    if (!customWrap) return;
+    const isCustom = sel.value && sel.value.includes('직접 명시');
+    customWrap.classList.toggle('show', isCustom);
+    if (isCustom) {
+      const textInput = customWrap.querySelector('input');
+      if (textInput) textInput.focus();
+    }
+  }
 
-function doGet(e) {
-  return ContentService
-    .createTextOutput(JSON.stringify({ result: 'ok' }))
-    .setMimeType(ContentService.MimeType.JSON);
-}
+  // 빠른 증상 태그
+  const quickList = ['구토','설사','식욕 부진','기침','재채기','눈 분비물','피부 가려움','다리 절뚝임','체중 감소','혈뇨','혈변','발작','무기력','음수량 증가'];
+  const qContainer = document.getElementById('quickSymptoms');
+  quickList.forEach(sym => {
+    const tag = document.createElement('div');
+    tag.textContent = sym;
+    tag.style.cssText = 'padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1.5px solid var(--border);background:var(--teal-pale);color:var(--muted);transition:all 0.18s;user-select:none;';
+    tag.onclick = function() {
+      if (quickSelected.has(sym)) {
+        quickSelected.delete(sym);
+        tag.style.background = 'var(--teal-pale)';
+        tag.style.borderColor = 'var(--border)';
+        tag.style.color = 'var(--muted)';
+      } else {
+        quickSelected.add(sym);
+        tag.style.background = 'var(--teal-light)';
+        tag.style.borderColor = 'var(--teal)';
+        tag.style.color = 'var(--teal)';
+        tag.style.fontWeight = '600';
+        // 텍스트 영역에 자동 추가
+        const ta = document.getElementById('symptoms');
+        if (!ta.value.includes(sym)) {
+          ta.value = ta.value ? ta.value + ', ' + sym : sym;
+        }
+      }
+    };
+    qContainer.appendChild(tag);
+  });
+
+  // 전화번호 자동 포맷
+  document.getElementById('phone').addEventListener('input', function() {
+    let v = this.value.replace(/\D/g, '');
+    if (v.length <= 3) this.value = v;
+    else if (v.length <= 7) this.value = v.slice(0,3) + '-' + v.slice(3);
+    else this.value = v.slice(0,3) + '-' + v.slice(3,7) + '-' + v.slice(7,11);
+  });
+
+  // ── VALIDATE ──
+  function setError(id, show, msg) {
+    const el = document.getElementById(id);
+    const err = document.getElementById(id + '-err');
+    if (!el || !err) return !show;
+    el.classList.toggle('error', show);
+    err.classList.toggle('show', show);
+    if (msg) err.textContent = msg;
+    return !show;
+  }
+
+  function getBreedValue() {
+    if (breedMode === 'select') return document.getElementById('breedSelect').value;
+    return document.getElementById('breedText').value.trim();
+  }
+
+  function validateForm() {
+    let ok = true;
+
+    // 보호자 성함
+    const name = document.getElementById('ownerName').value.trim();
+    ok = setError('ownerName', !name) && ok;
+
+    // 전화번호
+    const phone = document.getElementById('phone').value.replace(/\D/g, '');
+    ok = setError('phone', phone.length < 10, '올바른 전화번호를 입력해 주세요.') && ok;
+
+    // 반려동물 이름
+    const petName = document.getElementById('petName').value.trim();
+    ok = setError('petName', !petName) && ok;
+
+    // 나이
+    const age = document.getElementById('petAge').value;
+    ok = setError('petAge', !age) && ok;
+
+    // 성별
+    const gender = document.querySelector('input[name="gender"]:checked');
+    const gEl = document.getElementById('genderGroup');
+    const gErr = document.getElementById('gender-err');
+    if (!gender) {
+      gErr.classList.add('show'); ok = false;
+    } else {
+      gErr.classList.remove('show');
+    }
+
+    // 주소
+    const addr = document.getElementById('ownerAddress').value.trim();
+    ok = setError('ownerAddress', !addr) && ok;
+
+    // 품종
+    const breed = getBreedValue();
+    ok = setError('breed', !breed) && ok;
+
+    // 추가 반려동물 유효성
+    document.querySelectorAll('.extra-pet-card').forEach(card => {
+      const id = card.id.replace('extraPet-', '');
+      const en = document.getElementById('eName' + id).value.trim();
+      const ea = document.getElementById('eAge' + id).value;
+      const eg = document.querySelector('input[name="eGender' + id + '"]:checked');
+      const eSel = document.getElementById('eBreed' + id);
+      const eb = (eSel.value && eSel.value.includes('직접 명시'))
+        ? (document.getElementById('eBreedCustomText' + id) || {}).value || ''
+        : eSel.value;
+      if (!en) { setError('eName' + id, true); ok = false; } else { setError('eName' + id, false); }
+      if (!ea) { setError('eAge' + id, true); ok = false; } else { setError('eAge' + id, false); }
+      const egErr = document.getElementById('eGender' + id + '-err');
+      if (!eg) { egErr.classList.add('show'); ok = false; } else { egErr.classList.remove('show'); }
+      if (!eb) { setError('eBreed' + id, true); ok = false; } else { setError('eBreed' + id, false); }
+    });
+
+    // 초진/재진
+    const visitType = document.querySelector('input[name="visitType"]:checked');
+    const vtErr = document.getElementById('visitType-err');
+    if (!visitType) {
+      vtErr.classList.add('show'); ok = false;
+    } else {
+      vtErr.classList.remove('show');
+    }
+
+    // 증상
+    const sym = document.getElementById('symptoms').value.trim();
+    ok = setError('symptoms', !sym) && ok;
+
+    // 개인정보 동의
+    const privErr = document.getElementById('privacy-err');
+    if (!privacyState.p1 || !privacyState.p2) {
+      privErr.classList.add('show'); ok = false;
+    } else {
+      privErr.classList.remove('show');
+    }
+
+    return ok;
+  }
+
+  // 스텝 표시
+  function updateSteps() {
+    const n = document.getElementById('ownerName').value.trim();
+    const p = document.getElementById('phone').value.replace(/\D/g,'');
+    const pet = document.getElementById('petName').value.trim();
+    const age = document.getElementById('petAge').value;
+    const g = document.querySelector('input[name="gender"]:checked');
+    const b = getBreedValue();
+    const vt = document.querySelector('input[name="visitType"]:checked');
+    const s = document.getElementById('symptoms').value.trim();
+
+    const s1 = n && p.length >= 10;
+    const s2 = pet && age && g && b && vt;
+    const s3 = s;
+
+    document.getElementById('step1').className = 'step ' + (s1 ? 'done' : 'active');
+    document.getElementById('step2').className = 'step ' + (s2 ? 'done' : (s1 ? 'active' : ''));
+    document.getElementById('step3').className = 'step ' + (s3 ? 'done' : (s2 ? 'active' : ''));
+  }
+
+  document.getElementById('reservationForm').addEventListener('input', updateSteps);
+  document.querySelectorAll('input[name="gender"], input[name="visitType"]').forEach(r => r.addEventListener('change', updateSteps));
+
+  // 제출
+  document.getElementById('reservationForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    if (!validateForm()) {
+      const firstErr = document.querySelector('.error, .error-msg.show');
+      if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    const gender = document.querySelector('input[name="gender"]:checked').value;
+    const visitType = document.querySelector('input[name="visitType"]:checked').value;
+    const breed = getBreedValue();
+
+    // 추가 반려동물 정보 수집
+    const extraList = [];
+    document.querySelectorAll('.extra-pet-card').forEach(card => {
+      const id = card.id.replace('extraPet-', '');
+      const eSel = document.getElementById('eBreed' + id);
+      const eb = (eSel.value && eSel.value.includes('직접 명시'))
+        ? (document.getElementById('eBreedCustomText' + id) || {}).value || ''
+        : eSel.value;
+      extraList.push(
+        document.getElementById('eName' + id).value + ' / ' +
+        document.getElementById('eAge' + id).value + ' / ' +
+        (document.querySelector('input[name="eGender' + id + '"]:checked') || {}).value + ' / ' + eb
+      );
+    });
+
+    const payload = {
+      type: 'reservation',
+      visitType,
+      ownerName:    document.getElementById('ownerName').value.trim(),
+      phone:        document.getElementById('phone').value,
+      address:      document.getElementById('ownerAddress').value.trim(),
+      petName:      document.getElementById('petName').value.trim(),
+      petAge:       document.getElementById('petAge').value,
+      petBirthdate: document.getElementById('petBirthdate').value,
+      gender,
+      breed,
+      symptoms:     document.getElementById('symptoms').value.trim(),
+      extraPets:    extraList.join(' | ')
+    };
+
+    // 구글 시트 전송 (no-cors)
+    const form1 = new FormData();
+    form1.append('data', JSON.stringify(payload));
+    fetch('https://script.google.com/macros/s/AKfycbzwx85DjWxevvP4G622PUl_hwRbkukA7E7ZKhQuLBXC4gEeMNff76qS0QOgSRTp135ZYg/exec', {
+      method: 'POST',
+      mode: 'no-cors',
+      body: JSON.stringify(payload)
+    }).catch(() => {});
+
+    const summary = [
+      ['내원 구분', visitType],
+      ['주소', payload.address],
+      ['보호자', payload.ownerName],
+      ['전화번호', payload.phone],
+      ['반려동물', payload.petName],
+      ['나이', payload.petAge],
+      ...(payload.petBirthdate ? [['생년월일', payload.petBirthdate.replace(/-/g, '.')]] : []),
+      ['성별', gender],
+      ['품종', breed],
+      ['주증상', payload.symptoms.slice(0, 40) + (payload.symptoms.length > 40 ? '…' : '')],
+    ];
+
+    const summaryEl = document.getElementById('successSummary');
+    summaryEl.innerHTML = summary.map(([k,v]) =>
+      `<div class="success-info-row"><span>${k}</span><span>${v}</span></div>`
+    ).join('');
+
+    document.getElementById('reservationForm').style.display = 'none';
+    document.querySelector('.notice').style.display = 'none';
+    document.getElementById('successScreen').classList.add('show');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  function resetForm() {
+    document.getElementById('reservationForm').reset();
+    document.getElementById('reservationForm').style.display = 'block';
+    document.querySelector('.notice').style.display = 'flex';
+    document.getElementById('successScreen').classList.remove('show');
+    // 추가 동물 초기화
+    document.getElementById('extraPetsContainer').innerHTML = '';
+    extraPetCount = 0;
+    // 개인정보 동의 초기화
+    privacyState.p1 = false; privacyState.p2 = false;
+    ['p1','p2'].forEach(k => {
+      document.getElementById('chk-' + k).classList.remove('checked');
+      document.getElementById('body-' + k).classList.remove('show');
+      document.getElementById('icon-' + k).classList.remove('open');
+    });
+    quickSelected.clear();
+    document.querySelectorAll('#quickSymptoms div').forEach(t => {
+      t.style.background = 'var(--teal-pale)';
+      t.style.borderColor = 'var(--border)';
+      t.style.color = 'var(--muted)';
+      t.style.fontWeight = '500';
+    });
+    updateSteps();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── 주소 유효성
+  // (전화번호 포맷 아래 validate에서 처리)
+
+  // ── 추가 반려동물
+  let extraPetCount = 0;
+  const petBreedData = {
+    dog: [
+      '골든 리트리버','골든두들 (믹스)','그레이트 데인','그레이트 피레네즈',
+      '노르웨이안 엘크하운드',
+      '닥스훈트','달마시안','도베르만','도사견',
+      '라브라도 리트리버','라사압소','러프 콜리',
+      '말라뮤트 (알래스칸 말라뮤트)','말티즈','말티푸 (말티즈+푸들 믹스)',
+      '말티치 (말티즈+치와와 믹스)','말티포메 (말티즈+포메라니안 믹스)',
+      '말티숑 (말티즈+비숑 믹스)','믹스견 (혼혈)',
+      '미니어처 핀셔','미니어처 슈나우저','미니어처 불도그',
+      '바셋 하운드','버니즈 마운틴 독','베들링턴 테리어',
+      '보더 콜리','보스턴 테리어','복서','볼로네즈',
+      '불독 (잉글리시)','불마스티프','비글','비숑 프리제',
+      '사모예드','삽살개','세인트 버나드',
+      '셔틀랜드 쉽독 (쉘티)','스코티시 테리어','스피츠',
+      '시바견','시베리안 허스키','시추','시츄푸 (시추+푸들 믹스)',
+      '아메리칸 불리','아메리칸 스태퍼드셔 테리어','아이리시 세터',
+      '아이리시 울프하운드','에어데일 테리어',
+      '웰시 코기 (코기)','웨스트 하이랜드 테리어 (웨스티)',
+      '잉글리시 세터','잉글리시 스프링어 스패니얼',
+      '잭 러셀 테리어','저먼 셰퍼드 (독일 셰퍼드)','진돗개',
+      '차우차우','치와와','치와푸 (치와와+푸들 믹스)',
+      '카발리에 킹 찰스 스패니얼','코카스파니엘',
+      '토이 푸들','티컵 푸들',
+      '포메라니안','포메푸 (포메라니안+푸들 믹스)',
+      '포메치 (포메라니안+치와와 믹스)',
+      '프렌치 불독','플리 (헝가리안 목양견)',
+      '하바네즈','허스키두들 (허스키+푸들 믹스)',
+      '화이트 스위스 셰퍼드',
+      '기타 믹스견 (직접 명시)'
+    ],
+    cat: [
+      '고양이 믹스 (코리안 숏헤어)',
+      '나폴레옹 (민우에트)','노르웨이 숲',
+      '데번 렉스','도메스틱 롱헤어 (장모 혼혈)',
+      '러시안 블루','랙돌',
+      '메인쿤','먼치킨','믹스묘 (혼혈)',
+      '버만','버미즈','봄베이','브리티시 롱헤어','브리티시 쇼트헤어',
+      '샴','샤트룩스','셀커크 렉스','소말리','스코티시폴드',
+      '스코티시 스트레이트','스노우슈','스핑크스','시베리안','싱가푸라',
+      '아메리칸 숏헤어','아메리칸 컬','아비시니안',
+      '오리엔탈 쇼트헤어','오시캣',
+      '터키시 앙고라','터키시 밴','통키니즈','토이거',
+      '페르시안','하이랜더','뱅갈',
+      '기타 믹스묘 (직접 명시)'
+    ]
+  };
+
+  function buildBreedOptions(species) {
+    return (petBreedData[species] || []).map(b => `<option value="${b}">${b}</option>`).join('');
+  }
+
+  function addExtraPet() {
+    extraPetCount++;
+    const idx = extraPetCount;
+    const container = document.getElementById('extraPetsContainer');
+    const div = document.createElement('div');
+    div.className = 'extra-pet-card';
+    div.id = 'extraPet-' + idx;
+    div.innerHTML = `
+      <div class="extra-pet-header">
+        <span class="extra-pet-label">🐾 추가 반려동물 ${idx}</span>
+        <button type="button" class="btn-remove-pet" onclick="removeExtraPet(${idx})">✕</button>
+      </div>
+      <div class="field-group" style="margin-bottom:12px">
+        <div class="field">
+          <label>이름 <span class="req">*</span></label>
+          <input type="text" id="eName${idx}" placeholder="예: 뭉이" />
+          <span class="error-msg" id="eName${idx}-err">이름을 입력해 주세요.</span>
+        </div>
+        <div class="field">
+          <label>나이 <span class="req">*</span></label>
+          <div class="select-wrap">
+            <select id="eAge${idx}">
+              <option value="">나이 선택</option>
+              <option>1세 미만</option><option>1세</option><option>2세</option>
+              <option>3세</option><option>4세</option><option>5세</option>
+              <option>6세</option><option>7세</option><option>8세</option>
+              <option>9세</option><option>10세</option><option>11세</option>
+              <option>12세</option><option>13세</option><option>14세</option>
+              <option>15세 이상</option>
+            </select>
+          </div>
+          <span class="error-msg" id="eAge${idx}-err">나이를 선택해 주세요.</span>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:12px">
+        <label>생년월일 <span style="font-size:11px;font-weight:400;color:var(--muted);margin-left:4px">(선택 입력)</span></label>
+        <input type="date" id="eBirth${idx}" />
+      </div>
+      <div class="field" style="margin-bottom:12px">
+        <label>성별 <span class="req">*</span></label>
+        <div class="radio-group" id="eGender${idx}">
+          <div class="radio-btn"><input type="radio" name="eGender${idx}" id="eM${idx}" value="수컷" /><label for="eM${idx}">♂ 수컷</label></div>
+          <div class="radio-btn"><input type="radio" name="eGender${idx}" id="eF${idx}" value="암컷" /><label for="eF${idx}">♀ 암컷</label></div>
+          <div class="radio-btn"><input type="radio" name="eGender${idx}" id="eNM${idx}" value="수컷(중성화)" /><label for="eNM${idx}">수컷(중성화)</label></div>
+          <div class="radio-btn"><input type="radio" name="eGender${idx}" id="eNF${idx}" value="암컷(중성화)" /><label for="eNF${idx}">암컷(중성화)</label></div>
+        </div>
+        <span class="error-msg" id="eGender${idx}-err">성별을 선택해 주세요.</span>
+      </div>
+      <div class="field">
+        <label>품종 <span class="req">*</span></label>
+        <div class="species-tabs" style="margin-bottom:8px">
+          <div class="species-tab active" onclick="changeExtraSpecies(${idx},'dog',this)">🐶 강아지</div>
+          <div class="species-tab" onclick="changeExtraSpecies(${idx},'cat',this)">🐱 고양이</div>
+        </div>
+        <div class="select-wrap">
+          <select id="eBreed${idx}" onchange="onBreedChange('eBreed'+idx,'eBreedCustom'+idx)">
+            <option value="">품종을 선택해 주세요</option>
+            ${buildBreedOptions('dog')}
+          </select>
+        </div>
+        <div class="breed-custom-input" id="eBreedCustom${idx}">
+          <input type="text" id="eBreedCustomText${idx}" placeholder="품종명을 직접 입력해 주세요 (예: 포메라니안+치와와 믹스)" />
+        </div>
+        <span class="error-msg" id="eBreed${idx}-err">품종을 선택해 주세요.</span>
+      </div>
+    `;
+    container.appendChild(div);
+  }
+
+  function removeExtraPet(idx) {
+    const el = document.getElementById('extraPet-' + idx);
+    if (el) el.remove();
+  }
+
+  function changeExtraSpecies(idx, species, el) {
+    el.closest('.species-tabs').querySelectorAll('.species-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    const sel = document.getElementById('eBreed' + idx);
+    sel.innerHTML = '<option value="">품종을 선택해 주세요</option>' + buildBreedOptions(species);
+    // 종 변경 시 직접입력 칸 숨김
+    const customWrap = document.getElementById('eBreedCustom' + idx);
+    if (customWrap) customWrap.classList.remove('show');
+  }
+
+  // ── 개인정보 동의
+  const privacyState = { p1: false, p2: false };
+
+  function togglePrivacy(key) {
+    const body = document.getElementById('body-' + key);
+    const icon = document.getElementById('icon-' + key);
+    const chk  = document.getElementById('chk-' + key);
+    // 아코디언 토글
+    body.classList.toggle('show');
+    icon.classList.toggle('open');
+    // 체크박스 토글
+    privacyState[key] = !privacyState[key];
+    chk.classList.toggle('checked', privacyState[key]);
+  }
+
+  // ── 페이지 탭 전환
+  function switchPage(tab) {
+    document.getElementById('panelNew').classList.toggle('active', tab === 'new');
+    document.getElementById('panelChange').classList.toggle('active', tab === 'change');
+    document.getElementById('tabNew').classList.toggle('active', tab === 'new');
+    document.getElementById('tabChange').classList.toggle('active', tab === 'change');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── 변경/취소 유형 선택
+  let selectedChangeType = '';
+  function selectChangeType(type) {
+    selectedChangeType = type;
+    document.getElementById('btnTypeChange').className = 'change-type-btn' + (type === 'change' ? ' selected-change' : '');
+    document.getElementById('btnTypeCancel').className = 'change-type-btn' + (type === 'cancel' ? ' selected-cancel' : '');
+    document.getElementById('changeDetailWrap').classList.toggle('show', type === 'change');
+    document.getElementById('cancelDetailWrap').classList.toggle('show', type === 'cancel');
+    document.getElementById('changeSubmitWrap').style.display = 'block';
+    document.getElementById('changeType-err').style.display = 'none';
+    // 버튼 텍스트
+    document.getElementById('changeSubmitBtn').textContent = type === 'change' ? '예약 변경 신청하기 →' : '예약 취소 신청하기 →';
+  }
+
+  // 취소 빠른 선택 태그
+  function selectCancelTag(el, text) {
+    document.querySelectorAll('.cancel-tag').forEach(t => t.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('cCancelReason').value = text;
+  }
+
+  // 전화번호 자동 포맷 (변경/취소 폼)
+  document.getElementById('cPhone').addEventListener('input', function() {
+    let v = this.value.replace(/\D/g, '');
+    if (v.length <= 3) this.value = v;
+    else if (v.length <= 7) this.value = v.slice(0,3) + '-' + v.slice(3);
+    else this.value = v.slice(0,3) + '-' + v.slice(3,7) + '-' + v.slice(7,11);
+  });
+
+  // 변경/취소 폼 유효성
+  function validateChangeForm() {
+    let ok = true;
+    // 유형 선택
+    if (!selectedChangeType) {
+      document.getElementById('changeType-err').style.display = 'block'; ok = false;
+    }
+    // 공통 필드
+    const cn = document.getElementById('cOwnerName').value.trim();
+    if (!cn) { document.getElementById('cOwnerName').classList.add('error'); document.getElementById('cOwnerName-err').classList.add('show'); ok = false; }
+    else { document.getElementById('cOwnerName').classList.remove('error'); document.getElementById('cOwnerName-err').classList.remove('show'); }
+    const cp = document.getElementById('cPhone').value.replace(/\D/g,'');
+    if (cp.length < 10) { document.getElementById('cPhone').classList.add('error'); document.getElementById('cPhone-err').classList.add('show'); ok = false; }
+    else { document.getElementById('cPhone').classList.remove('error'); document.getElementById('cPhone-err').classList.remove('show'); }
+    const cpet = document.getElementById('cPetName').value.trim();
+    if (!cpet) { document.getElementById('cPetName').classList.add('error'); document.getElementById('cPetName-err').classList.add('show'); ok = false; }
+    else { document.getElementById('cPetName').classList.remove('error'); document.getElementById('cPetName-err').classList.remove('show'); }
+    const cdate = document.getElementById('cApptDate').value;
+    if (!cdate) { document.getElementById('cApptDate').classList.add('error'); document.getElementById('cApptDate-err').classList.add('show'); ok = false; }
+    else { document.getElementById('cApptDate').classList.remove('error'); document.getElementById('cApptDate-err').classList.remove('show'); }
+
+    if (selectedChangeType === 'change') {
+      const nd = document.getElementById('cNewDate').value;
+      if (!nd) { document.getElementById('cNewDate').classList.add('error'); document.getElementById('cNewDate-err').classList.add('show'); ok = false; }
+      else { document.getElementById('cNewDate').classList.remove('error'); document.getElementById('cNewDate-err').classList.remove('show'); }
+      const cr = document.getElementById('cChangeReason').value.trim();
+      if (!cr) { document.getElementById('cChangeReason').classList.add('error'); document.getElementById('cChangeReason-err').classList.add('show'); ok = false; }
+      else { document.getElementById('cChangeReason').classList.remove('error'); document.getElementById('cChangeReason-err').classList.remove('show'); }
+    }
+    if (selectedChangeType === 'cancel') {
+      const ccr = document.getElementById('cCancelReason').value.trim();
+      if (!ccr) { document.getElementById('cCancelReason').classList.add('error'); document.getElementById('cCancelReason-err').classList.add('show'); ok = false; }
+      else { document.getElementById('cCancelReason').classList.remove('error'); document.getElementById('cCancelReason-err').classList.remove('show'); }
+    }
+    return ok;
+  }
+
+  // 날짜 포맷 헬퍼
+  function formatDT(val) {
+    if (!val) return '-';
+    return val.replace('T', ' ').slice(0, 16);
+  }
+
+  // 변경/취소 폼 제출
+  document.getElementById('changeForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    if (!validateChangeForm()) {
+      const firstErr = document.querySelector('#changeForm .error');
+      if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+    const isChange = selectedChangeType === 'change';
+
+    const payload = {
+      type:      isChange ? 'change' : 'cancel',
+      ownerName: document.getElementById('cOwnerName').value.trim(),
+      phone:     document.getElementById('cPhone').value,
+      petName:   document.getElementById('cPetName').value.trim(),
+      apptDate:  formatDT(document.getElementById('cApptDate').value),
+      newDate:   isChange ? formatDT(document.getElementById('cNewDate').value) : '',
+      reason:    isChange
+        ? document.getElementById('cChangeReason').value.trim()
+        : document.getElementById('cCancelReason').value.trim()
+    };
+
+    fetch('https://script.google.com/macros/s/AKfycbzwx85DjWxevvP4G622PUl_hwRbkukA7E7ZKhQuLBXC4gEeMNff76qS0QOgSRTp135ZYg/exec', {
+      method: 'POST',
+      mode: 'no-cors',
+      body: JSON.stringify(payload)
+    }).catch(() => {});
+
+    const summary = [
+      ['유형', isChange ? '예약 변경' : '예약 취소'],
+      ['보호자', payload.ownerName],
+      ['전화번호', payload.phone],
+      ['반려동물', payload.petName],
+      ['기존 예약', payload.apptDate],
+      ...(isChange ? [
+        ['변경 희망일', payload.newDate],
+        ['변경 사유', payload.reason.slice(0,40) + (payload.reason.length > 40 ? '…' : '')]
+      ] : [
+        ['취소 사유', payload.reason.slice(0,40) + (payload.reason.length > 40 ? '…' : '')]
+      ])
+    ];
+    document.getElementById('changeSuccessIcon').textContent = isChange ? '📅' : '✅';
+    document.getElementById('changeSuccessTitle').textContent = isChange ? '예약 변경 신청이 완료되었습니다' : '예약 취소 신청이 완료되었습니다';
+    document.getElementById('changeSummary').innerHTML = summary.map(([k,v]) =>
+      `<div class="success-info-row"><span>${k}</span><span>${v}</span></div>`).join('');
+    document.getElementById('changeForm').style.display = 'none';
+    document.querySelector('#panelChange .notice').style.display = 'none';
+    document.querySelector('#panelChange .section-card').style.display = 'none';
+    document.getElementById('changeSuccessScreen').classList.add('show');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  function resetChangeForm() {
+    document.getElementById('changeForm').reset();
+    document.getElementById('changeForm').style.display = 'block';
+    document.querySelector('#panelChange .notice').style.display = 'flex';
+    document.querySelector('#panelChange .section-card').style.display = 'block';
+    document.getElementById('changeSuccessScreen').classList.remove('show');
+    selectedChangeType = '';
+    document.getElementById('btnTypeChange').className = 'change-type-btn';
+    document.getElementById('btnTypeCancel').className = 'change-type-btn';
+    document.getElementById('changeDetailWrap').classList.remove('show');
+    document.getElementById('cancelDetailWrap').classList.remove('show');
+    document.getElementById('changeSubmitWrap').style.display = 'none';
+    document.querySelectorAll('.cancel-tag').forEach(t => t.classList.remove('selected'));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── 초기화
+  populateBreeds();
+  updateSteps();
+</script>
+</body>
+</html>
