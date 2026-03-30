@@ -1000,19 +1000,66 @@
           <p>원하시는 방문 일정을 알려주세요</p>
         </div>
       </div>
-      <div class="field-group">
-        <div class="field">
-          <label for="wishDate1">1순위 희망일시 <span class="req">*</span></label>
-          <input type="datetime-local" id="wishDate1" />
-          <span class="error-msg" id="wishDate1-err">희망 일자·시간을 입력해 주세요.</span>
-        </div>
-        <div class="field">
-          <label for="wishDate2">2순위 희망일시 <span style="font-size:11px;font-weight:400;color:var(--muted);margin-left:4px">(선택)</span></label>
-          <input type="datetime-local" id="wishDate2" />
+
+      <!-- 1순위 -->
+      <div style="background:var(--teal-pale);border-radius:12px;padding:14px;margin-bottom:12px;border:1.5px solid var(--teal-light)">
+        <div style="font-size:12px;font-weight:700;color:var(--teal);margin-bottom:10px">📌 1순위 희망일시 <span style="color:var(--error)">*</span></div>
+        <div class="field-group" style="margin-bottom:10px">
+          <div class="field">
+            <label for="wishDate1">날짜 <span class="req">*</span></label>
+            <input type="date" id="wishDate1" onchange="updateTimeSlots('wishTime1','wishDate1')" />
+            <span class="error-msg" id="wishDate1-err">날짜를 선택해 주세요.</span>
+          </div>
+          <div class="field">
+            <label for="wishTime1">시간 <span class="req">*</span></label>
+            <div class="select-wrap">
+              <select id="wishTime1">
+                <option value="">날짜를 먼저 선택해 주세요</option>
+              </select>
+            </div>
+            <span class="error-msg" id="wishTime1-err">시간을 선택해 주세요.</span>
+          </div>
         </div>
       </div>
-      <div style="margin-top:8px;font-size:11px;color:var(--muted);line-height:1.6;">
-        💡 예약 확정 시 희망일시 기준으로 연락드립니다. 일정이 맞지 않을 경우 별도 안내드립니다.
+
+      <!-- 2순위 -->
+      <div style="background:var(--teal-pale);border-radius:12px;padding:14px;margin-bottom:14px;border:1.5px solid var(--teal-light)">
+        <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:10px">📌 2순위 희망일시 <span style="font-size:11px;font-weight:400">(선택)</span></div>
+        <div class="field-group">
+          <div class="field">
+            <label for="wishDate2">날짜</label>
+            <input type="date" id="wishDate2" onchange="updateTimeSlots('wishTime2','wishDate2')" />
+          </div>
+          <div class="field">
+            <label for="wishTime2">시간</label>
+            <div class="select-wrap">
+              <select id="wishTime2">
+                <option value="">날짜를 먼저 선택해 주세요</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 담당 선생님 -->
+      <div class="field">
+        <label for="doctorPref">담당 선생님 선택 <span style="font-size:11px;font-weight:400;color:var(--muted);margin-left:4px">(선택)</span></label>
+        <div class="select-wrap">
+          <select id="doctorPref">
+            <option value="">선생님을 선택해 주세요</option>
+            <option value="노태균 대표 원장님">노태균 대표 원장님</option>
+            <option value="서미미 내과 원장님">서미미 내과 원장님</option>
+            <option value="서혜린 내과 과장님">서혜린 내과 과장님</option>
+            <option value="구경진 외과 과장님">구경진 외과 과장님</option>
+            <option value="강나현 수의사 선생님">강나현 수의사 선생님</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-top:10px;font-size:11px;color:var(--muted);line-height:1.7;">
+        💡 원하시는 지정 선생님이 없으실 경우, 예약 시간대 빠른 진료가 가능한 선생님 앞으로 지정됩니다.<br>
+        ※ 예약 확정 시 희망일시 기준으로 연락드립니다. 일정이 맞지 않을 경우 별도 안내드립니다.<br>
+        ※ 명절 당일은 휴진, 일요일·공휴일은 할증비가 발생합니다.
       </div>
     </div>
 
@@ -1192,9 +1239,9 @@
           <span class="error-msg" id="cPetName-err">이름을 입력해 주세요.</span>
         </div>
         <div class="field">
-          <label for="cApptDate">기존 예약 일자·시간 <span class="req">*</span></label>
-          <input type="datetime-local" id="cApptDate" />
-          <span class="error-msg" id="cApptDate-err">예약 일자·시간을 입력해 주세요.</span>
+          <label for="cApptDate">기존 예약 날짜 <span class="req">*</span></label>
+          <input type="date" id="cApptDate" />
+          <span class="error-msg" id="cApptDate-err">예약 날짜를 입력해 주세요.</span>
         </div>
       </div>
     </div>
@@ -1208,10 +1255,21 @@
           <p>변경을 원하시는 일정을 알려주세요</p>
         </div>
       </div>
-      <div class="field" style="margin-bottom:14px">
-        <label for="cNewDate">변경 희망 일자·시간 <span class="req">*</span></label>
-        <input type="datetime-local" id="cNewDate" />
-        <span class="error-msg" id="cNewDate-err">변경 희망 일자·시간을 입력해 주세요.</span>
+      <div class="field-group" style="margin-bottom:14px">
+        <div class="field">
+          <label for="cNewDate">변경 희망 날짜 <span class="req">*</span></label>
+          <input type="date" id="cNewDate" onchange="updateTimeSlots('cNewTime','cNewDate')" />
+          <span class="error-msg" id="cNewDate-err">변경 희망 날짜를 입력해 주세요.</span>
+        </div>
+        <div class="field">
+          <label for="cNewTime">변경 희망 시간 <span class="req">*</span></label>
+          <div class="select-wrap">
+            <select id="cNewTime">
+              <option value="">날짜를 먼저 선택해 주세요</option>
+            </select>
+          </div>
+          <span class="error-msg" id="cNewTime-err">시간을 선택해 주세요.</span>
+        </div>
       </div>
       <hr class="form-divider">
       <div class="field">
@@ -1513,6 +1571,8 @@
     // 희망 예약일시
     const wishDate1 = document.getElementById('wishDate1').value;
     ok = setError('wishDate1', !wishDate1) && ok;
+    const wishTime1 = document.getElementById('wishTime1').value;
+    ok = setError('wishTime1', !wishTime1) && ok;
 
     // 증상
     const sym = document.getElementById('symptoms').value.trim();
@@ -1593,8 +1653,11 @@
       breed,
       symptoms:     document.getElementById('symptoms').value.trim(),
       extraPets:    extraList.join(' | '),
-      wishDate1:    document.getElementById('wishDate1').value ? document.getElementById('wishDate1').value.replace('T', ' ').slice(0,16) : '',
-      wishDate2:    document.getElementById('wishDate2').value ? document.getElementById('wishDate2').value.replace('T', ' ').slice(0,16) : ''
+      wishDate1:    document.getElementById('wishDate1').value || '',
+      wishTime1:    document.getElementById('wishTime1').value || '',
+      wishDate2:    document.getElementById('wishDate2').value || '',
+      wishTime2:    document.getElementById('wishTime2').value || '',
+      doctor:       document.getElementById('doctorPref').value || '시간대 빠른 선생님 배정'
     };
 
     // 구글 시트 전송 (no-cors)
@@ -1616,8 +1679,9 @@
       ...(payload.petBirthdate ? [['생년월일', payload.petBirthdate.replace(/-/g, '.')]] : []),
       ['성별', gender],
       ['품종', breed],
-      ['희망일시(1순위)', payload.wishDate1],
-      ...(payload.wishDate2 ? [['희망일시(2순위)', payload.wishDate2]] : []),
+      ['희망일시(1순위)', payload.wishDate1 + ' ' + payload.wishTime1],
+      ...(payload.wishDate2 ? [['희망일시(2순위)', payload.wishDate2 + ' ' + payload.wishTime2]] : []),
+      ['담당 선생님', payload.doctor],
       ['주증상', payload.symptoms.slice(0, 40) + (payload.symptoms.length > 40 ? '…' : '')],
     ];
 
@@ -1877,6 +1941,9 @@
       const nd = document.getElementById('cNewDate').value;
       if (!nd) { document.getElementById('cNewDate').classList.add('error'); document.getElementById('cNewDate-err').classList.add('show'); ok = false; }
       else { document.getElementById('cNewDate').classList.remove('error'); document.getElementById('cNewDate-err').classList.remove('show'); }
+      const nt = document.getElementById('cNewTime').value;
+      if (!nt) { document.getElementById('cNewTime').classList.add('error'); document.getElementById('cNewTime-err').classList.add('show'); ok = false; }
+      else { document.getElementById('cNewTime').classList.remove('error'); document.getElementById('cNewTime-err').classList.remove('show'); }
       const cr = document.getElementById('cChangeReason').value.trim();
       if (!cr) { document.getElementById('cChangeReason').classList.add('error'); document.getElementById('cChangeReason-err').classList.add('show'); ok = false; }
       else { document.getElementById('cChangeReason').classList.remove('error'); document.getElementById('cChangeReason-err').classList.remove('show'); }
@@ -1911,7 +1978,8 @@
       phone:     document.getElementById('cPhone').value,
       petName:   document.getElementById('cPetName').value.trim(),
       apptDate:  formatDT(document.getElementById('cApptDate').value),
-      newDate:   isChange ? formatDT(document.getElementById('cNewDate').value) : '',
+      newDate:   isChange ? document.getElementById('cNewDate').value : '',
+      newTime:   isChange ? document.getElementById('cNewTime').value : '',
       reason:    isChange
         ? document.getElementById('cChangeReason').value.trim()
         : document.getElementById('cCancelReason').value.trim()
@@ -1930,7 +1998,7 @@
       ['반려동물', payload.petName],
       ['기존 예약', payload.apptDate],
       ...(isChange ? [
-        ['변경 희망일', payload.newDate],
+        ['변경 희망일', payload.newDate + ' ' + payload.newTime],
         ['변경 사유', payload.reason.slice(0,40) + (payload.reason.length > 40 ? '…' : '')]
       ] : [
         ['취소 사유', payload.reason.slice(0,40) + (payload.reason.length > 40 ? '…' : '')]
@@ -1959,6 +2027,29 @@
     document.getElementById('changeSubmitWrap').style.display = 'none';
     document.querySelectorAll('.cancel-tag').forEach(t => t.classList.remove('selected'));
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // ── 시간 슬롯
+  const weekdaySlots = ['09:30','10:00','10:30','11:00','11:30','12:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00'];
+  const weekendSlots = ['14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00'];
+
+  function updateTimeSlots(timeSelectId, dateInputId) {
+    const dateVal = document.getElementById(dateInputId).value;
+    const timeSel = document.getElementById(timeSelectId);
+    timeSel.innerHTML = '';
+    if (!dateVal) {
+      timeSel.innerHTML = '<option value="">날짜를 먼저 선택해 주세요</option>';
+      return;
+    }
+    const d = new Date(dateVal);
+    const day = d.getDay(); // 0=일, 6=토
+    const slots = (day === 0) ? weekendSlots : weekdaySlots;
+    timeSel.innerHTML = '<option value="">시간 선택</option>';
+    slots.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t; opt.textContent = t;
+      timeSel.appendChild(opt);
+    });
   }
 
   // ── 초기화
