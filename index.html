@@ -670,6 +670,26 @@
     }
     .btn-remove-pet:hover { color: var(--error); }
 
+    /* ── 방문 경로 태그 ── */
+    .route-tag {
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1.5px solid var(--border);
+      background: var(--teal-pale);
+      color: var(--muted);
+      transition: all 0.18s;
+      user-select: none;
+    }
+    .route-tag.selected {
+      background: var(--teal-light);
+      border-color: var(--teal);
+      color: var(--teal);
+      font-weight: 700;
+    }
+
     /* ── 취소 빠른선택 태그 ── */
     .cancel-tag {
       padding: 6px 14px;
@@ -1003,6 +1023,21 @@
           </div>
         </div>
         <span class="error-msg" id="visitType-err">초진/재진을 선택해 주세요.</span>
+      </div>
+
+      <!-- 방문 경로 (초진 선택 시) -->
+      <div class="field change-form-wrap" id="visitRouteWrap" style="margin-top:14px">
+        <label>방문 경로 <span class="req">*</span></label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px" id="visitRouteTags">
+          <div class="route-tag" onclick="selectRouteTag(this, '간판')">🪧 간판</div>
+          <div class="route-tag" onclick="selectRouteTag(this, '블로그')">📝 블로그</div>
+          <div class="route-tag" onclick="selectRouteTag(this, '인스타그램')">📸 인스타그램</div>
+          <div class="route-tag" onclick="selectRouteTag(this, '카카오톡채널')">💬 카카오톡채널</div>
+          <div class="route-tag" onclick="selectRouteTag(this, '인터넷검색')">🔍 인터넷검색</div>
+          <div class="route-tag" onclick="selectRouteTag(this, '지인소개')">👥 지인소개</div>
+        </div>
+        <input type="hidden" id="visitRoute" />
+        <span class="error-msg" id="visitRoute-err">방문 경로를 선택해 주세요.</span>
       </div>
     </div>
 
@@ -1583,6 +1618,17 @@
       vtErr.classList.remove('show');
     }
 
+    // 방문경로 (초진일 때만 필수)
+    if (visitType && visitType.value === '초진') {
+      const route = document.getElementById('visitRoute').value;
+      const routeErr = document.getElementById('visitRoute-err');
+      if (!route) {
+        routeErr.classList.add('show'); ok = false;
+      } else {
+        routeErr.classList.remove('show');
+      }
+    }
+
     // 희망 예약일시
     const wishDate1 = document.getElementById('wishDate1').value;
     ok = setError('wishDate1', !wishDate1) && ok;
@@ -1627,6 +1673,26 @@
   document.getElementById('reservationForm').addEventListener('input', updateSteps);
   document.querySelectorAll('input[name="gender"], input[name="visitType"]').forEach(r => r.addEventListener('change', updateSteps));
 
+  // 초진/재진 선택 시 방문경로 표시/숨김
+  document.querySelectorAll('input[name="visitType"]').forEach(r => r.addEventListener('change', function() {
+    const wrap = document.getElementById('visitRouteWrap');
+    if (this.value === '초진') {
+      wrap.classList.add('show');
+    } else {
+      wrap.classList.remove('show');
+      // 재진 선택 시 방문경로 초기화
+      document.getElementById('visitRoute').value = '';
+      document.querySelectorAll('.route-tag').forEach(t => t.classList.remove('selected'));
+    }
+  }));
+
+  // 방문경로 선택
+  function selectRouteTag(el, route) {
+    document.querySelectorAll('.route-tag').forEach(t => t.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('visitRoute').value = route;
+  }
+
   // 제출
   document.getElementById('reservationForm').addEventListener('submit', function(e) {
     e.preventDefault();
@@ -1668,6 +1734,7 @@
       breed,
       symptoms:     document.getElementById('symptoms').value.trim(),
       extraPets:    extraList.join(' | '),
+      visitRoute:   document.getElementById('visitRoute').value || '',
       wishDate1:    document.getElementById('wishDate1').value || '',
       wishTime1:    document.getElementById('wishTime1').value || '',
       wishDate2:    document.getElementById('wishDate2').value || '',
@@ -1686,6 +1753,7 @@
 
     const summary = [
       ['내원 구분', visitType],
+      ...(visitType === '초진' ? [['방문 경로', document.getElementById('visitRoute').value]] : []),
       ['주소', payload.address],
       ['보호자', payload.ownerName],
       ['전화번호', payload.phone],
